@@ -249,9 +249,9 @@ const fmtDate     = key => { const [,m,d]=key.split("-"); return `${m}월 ${d}�
 const timeRange   = (s,e) => s&&e?`${s} ~ ${e}`:s?`${s}~`:e?`~${e}`:"";
 
 const DEMO_USERS = [
-  { uid:"u1", name:"김지수", email:"jisu@gmail.com",    photo:"🏊", color:"#0077B6" },
-  { uid:"u2", name:"박민준", email:"minjun@gmail.com",  photo:"🏊‍♂️", color:"#00B4D8" },
-  { uid:"u3", name:"이서연", email:"seoyeon@gmail.com", photo:"🏊‍♀️", color:"#48CAE4" },
+  { uid:"u1", name:"손득영", email:"jisu@gmail.com",    photo:"🏊", color:"#0077B6" },
+  { uid:"u2", name:"박윤정", email:"minjun@gmail.com",  photo:"🏊‍♂️", color:"#00B4D8" },
+  { uid:"u3", name:"우승연", email:"seoyeon@gmail.com", photo:"🏊‍♀️", color:"#48CAE4" },
 ];
 
 const load = (k,def) => { try { return JSON.parse(localStorage.getItem(k))??def; } catch { return def; } };
