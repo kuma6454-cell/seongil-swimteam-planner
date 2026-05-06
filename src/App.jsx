@@ -56,19 +56,64 @@ const firstDay    = (y,m) => new Date(y,m,1).getDay();
 const fmtDate     = key => { const [,m,d]=key.split("-"); return `${m}월 ${d}일`; };
 const timeRange   = (s,e) => s&&e?`${s} ~ ${e}`:s?`${s}~`:e?`~${e}`:"";
 
+// ─── 공휴일 가져오기 (Google Calendar API) ────────────────────────────────────
+const GOOGLE_CAL_KEY = "AIzaSyDpcCBmK47Bse81OmFFrKAm7rF5BFZkok8"; // Firebase API 키 재사용
+const KR_HOLIDAY_CAL = "ko.south_korea%23holiday%40group.v.calendar.google.com";
+
+async function fetchHolidays(year) {
+  try {
+    const timeMin = encodeURIComponent(`${year}-01-01T00:00:00Z`);
+    const timeMax = encodeURIComponent(`${year}-12-31T23:59:59Z`);
+    const url = `https://www.googleapis.com/calendar/v3/calendars/${KR_HOLIDAY_CAL}/events?key=${GOOGLE_CAL_KEY}&timeMin=${timeMin}&timeMax=${timeMax}&singleEvents=true&maxResults=100`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    const map  = {};
+    (data.items || []).forEach(item => {
+      const date = item.start?.date;
+      if (date) map[date] = item.summary;
+    });
+    return map;
+  } catch(e) {
+    console.error("공휴일 로딩 실패:", e);
+    return {};
+  }
+}
+
+// ─── 공휴일 가져오기 (Google Calendar API) ────────────────────────────────────
+async function fetchHolidays(year) {
+  try {
+    const calId = "ko.south_korea%23holiday%40group.v.calendar.google.com";
+    const key   = "AIzaSyDpcCBmK47Bse81OmFFrKAm7rF5BFZkok8";
+    const tMin  = encodeURIComponent(`${year}-01-01T00:00:00Z`);
+    const tMax  = encodeURIComponent(`${year}-12-31T23:59:59Z`);
+    const url   = `https://www.googleapis.com/calendar/v3/calendars/${calId}/events?key=${key}&timeMin=${tMin}&timeMax=${tMax}&singleEvents=true&maxResults=100`;
+    const res   = await fetch(url);
+    const data  = await res.json();
+    const map   = {};
+    (data.items || []).forEach(item => {
+      if (item.start?.date) map[item.start.date] = item.summary;
+    });
+    return map;
+  } catch(e) {
+    console.error("공휴일 로딩 실패:", e);
+    return {};
+  }
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 export default function App() {
-  const [user,     setUser]     = useState(null);
-  const [loading,  setLoading]  = useState(true);
-  const [events,   setEvents]   = useState([]);  // Firestore 실시간
-  const [year,     setYear]     = useState(today.getFullYear());
-  const [month,    setMonth]    = useState(today.getMonth());
-  const [slideDir, setSlideDir] = useState(null);
-  const [modal,    setModal]    = useState(null);
-  const [form,     setForm]     = useState({});
-  const [tab,      setTab]      = useState("calendar");
-  const [toast,    setToast]    = useState(null);
-  const [syncAnim, setSyncAnim] = useState(false);
+  const [user,      setUser]      = useState(null);
+  const [loading,   setLoading]   = useState(true);
+  const [events,    setEvents]    = useState([]);
+  const [holidays,  setHolidays]  = useState({});
+  const [year,      setYear]      = useState(today.getFullYear());
+  const [month,     setMonth]     = useState(today.getMonth());
+  const [slideDir,  setSlideDir]  = useState(null);
+  const [modal,     setModal]     = useState(null);
+  const [form,      setForm]      = useState({});
+  const [tab,       setTab]       = useState("calendar");
+  const [toast,     setToast]     = useState(null);
+  const [syncAnim,  setSyncAnim]  = useState(false);
 
   const touchStartX = useRef(null);
   const touchStartY = useRef(null);
@@ -82,6 +127,11 @@ export default function App() {
     });
     return unsub;
   }, []);
+
+  // ── 공휴일 로딩 ────────────────────────────────────────────────────────────
+  useEffect(() => {
+    fetchHolidays(year).then(setHolidays);
+  }, [year]);
 
   // ── Firestore 실시간 동기화 ─────────────────────────────────────────────────
   useEffect(() => {
@@ -281,11 +331,16 @@ export default function App() {
                 const evs=key?getEventsForDate(key):[];
                 const isToday=key===todayKey;
                 const col=idx%7;
+                const holidayName=key?holidays[key]:null;
+                const isHoliday=!!holidayName||col===0;
+                const dayColor=isToday?"white":isHoliday?"#FF3B3B":col===6?"#00B4D8":"#1a3a5c";
                 return (
                   <div key={idx} onClick={()=>valid&&openAdd(key)}
-                    style={{...S.cell,...(valid?{}:S.cellEmpty),...(isToday?S.cellToday:{})}}>
+                    style={{...S.cell,...(valid?{}:S.cellEmpty),...(isToday?S.cellToday:{}),
+                      ...(holidayName&&!isToday?{background:"#FFF5F5",borderColor:"#FFD0D0"}:{})}}>
                     {valid && <>
-                      <span style={{...S.dayNum,color:isToday?"white":col===0?"#FF6B6B":col===6?"#00B4D8":"#1a3a5c",background:isToday?"#0077B6":"transparent"}}>{dayNum}</span>
+                      <span style={{...S.dayNum,color:dayColor,background:isToday?"#0077B6":"transparent"}}>{dayNum}</span>
+                      {holidayName&&<div style={{fontSize:8,color:"#FF3B3B",fontWeight:700,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginBottom:1,lineHeight:1.2}}>{holidayName}</div>}
                       {evs.slice(0,2).map((ev,i)=>(
                         <div key={i} onClick={e=>openEdit(ev,e)}
                           style={{...S.chip,background:ev.color+"33",borderLeftColor:ev.color,color:ev.color}}>
@@ -321,6 +376,7 @@ export default function App() {
                             {d}일 <span style={{fontWeight:500,opacity:0.75,marginLeft:3}}>{dayOfWeek}</span>
                           </div>
                           {dateKey===todayKey&&<span style={{fontSize:10,background:"#E0F4FF",color:"#0077B6",borderRadius:20,padding:"2px 8px",fontWeight:700}}>오늘</span>}
+                          {holidays[dateKey]&&<span style={{fontSize:10,background:"#FFE8E8",color:"#FF3B3B",borderRadius:20,padding:"2px 8px",fontWeight:700}}>🎌 {holidays[dateKey]}</span>}
                         </div>
                         {evs.map(ev=>(
                           <div key={ev.id} onClick={e=>openEdit(ev,e)}
