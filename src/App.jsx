@@ -57,28 +57,6 @@ const fmtDate     = key => { const [,m,d]=key.split("-"); return `${m}월 ${d}�
 const timeRange   = (s,e) => s&&e?`${s} ~ ${e}`:s?`${s}~`:e?`~${e}`:"";
 
 // ─── 공휴일 가져오기 (Google Calendar API) ────────────────────────────────────
-const GOOGLE_CAL_KEY = "AIzaSyDpcCBmK47Bse81OmFFrKAm7rF5BFZkok8"; // Firebase API 키 재사용
-const KR_HOLIDAY_CAL = "ko.south_korea%23holiday%40group.v.calendar.google.com";
-
-async function fetchHolidays(year) {
-  try {
-    const timeMin = encodeURIComponent(`${year}-01-01T00:00:00Z`);
-    const timeMax = encodeURIComponent(`${year}-12-31T23:59:59Z`);
-    const url = `https://www.googleapis.com/calendar/v3/calendars/${KR_HOLIDAY_CAL}/events?key=${GOOGLE_CAL_KEY}&timeMin=${timeMin}&timeMax=${timeMax}&singleEvents=true&maxResults=100`;
-    const res  = await fetch(url);
-    const data = await res.json();
-    const map  = {};
-    (data.items || []).forEach(item => {
-      const date = item.start?.date;
-      if (date) map[date] = item.summary;
-    });
-    return map;
-  } catch(e) {
-    console.error("공휴일 로딩 실패:", e);
-    return {};
-  }
-}
-
 // ─── 공휴일 가져오기 (Google Calendar API) ────────────────────────────────────
 async function fetchHolidays(year) {
   try {
