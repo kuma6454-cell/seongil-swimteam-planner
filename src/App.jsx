@@ -30,7 +30,7 @@ const METRO_POOLS = {
 };
 const PROVINCE_POOLS = {
   "경기도": {"수원시":["수원시민체육관 수영장","수원실내수영장","영통구 수영장","팔달구 수영장"],"성남시":["성남시민체육관 수영장","분당구 수영장","중원구 수영장","수정구 수영장"],"고양시":["고양시민체육관 수영장","덕양구 수영장","일산동구 수영장","일산서구 수영장"],"용인시":["용인시민체육관 수영장","기흥구 수영장","수지구 수영장","처인구 수영장"],"부천시":["부천시민체육관 수영장","원미구 수영장","오정구 수영장"],"안산시":["안산시민체육관 수영장","단원구 수영장","상록구 수영장"],"안양시":["안양시민체육관 수영장","만안구 수영장","동안구 수영장"],"남양주시":["남양주시민체육관 수영장","진접읍 수영장","별내면 수영장"],"화성시":["화성시민체육관 수영장","동탄 수영장","봉담 수영장"],"평택시":["평택시민체육관 수영장","안중읍 수영장","팽성읍 수영장"],"의정부시":["의정부시민체육관 수영장","호원동 수영장"],"시흥시":["시흥시민체육관 수영장","은행동 수영장","정왕동 수영장"],"파주시":["파주시민체육관 수영장","금촌동 수영장","운정 수영장"],"김포시":["김포시민체육관 수영장","장기동 수영장"],"광주시":["광주시민체육관 수영장","경안동 수영장"],"광명시":["광명시민체육관 수영장","소하동 수영장"],"군포시":["군포시민체육관 수영장","산본동 수영장"],"하남시":["하남시민체육관 수영장","미사 수영장"],"오산시":["오산시민체육관 수영장"],"이천시":["이천시민체육관 수영장","설봉공원 수영장"],"양주시":["양주시민체육관 수영장"],"구리시":["구리시민체육관 수영장"],"포천시":["포천시민체육관 수영장"],"의왕시":["의왕시민체육관 수영장"],"여주시":["여주시민체육관 수영장"],"동두천시":["동두천시민체육관 수영장"],"양평군":["양평군민체육관 수영장"],"가평군":["가평군민체육관 수영장"],"연천군":["연천군민체육관 수영장"]},
-  "강원특별자치도": {"춘천시":["국민체육센터 수영장","석사동 수영장","효자동 수영장"],"원주시":["원주시민체육관 수영장","무실동 수영장","단구동 수영장"],"강릉시":["강릉시민체육관 수영장","교동 수영장","포남동 수영장"],"동해시":["동해시민체육관 수영장"],"태백시":["태백시민체육관 수영장"],"속초시":["속초시민체육관 수영장"],"삼척시":["삼척시민체육관 수영장"],"홍천군":["홍천군민체육관 수영장"],"횡성군":["횡성군민체육관 수영장"],"영월군":["영월군민체육관 수영장"],"평창군":["평창군민체육관 수영장"],"정선군":["정선군민체육관 수영장"],"철원군":["철원군민체육관 수영장"],"화천군":["화천군민체육관 수영장"],"양구군":["양구군민체육관 수영장"],"인제군":["인제군민체육관 수영장"],"고성군":["고성군민체육관 수영장"],"양양군":["양양군민체육관 수영장"]},
+  "강원특별자치도": {"춘천시":["구민체육센터 수영장","석사동 수영장","효자동 수영장"],"원주시":["원주시민체육관 수영장","무실동 수영장","단구동 수영장"],"강릉시":["강릉시민체육관 수영장","교동 수영장","포남동 수영장"],"동해시":["동해시민체육관 수영장"],"태백시":["태백시민체육관 수영장"],"속초시":["속초시민체육관 수영장"],"삼척시":["삼척시민체육관 수영장"],"홍천군":["홍천군민체육관 수영장"],"횡성군":["횡성군민체육관 수영장"],"영월군":["영월군민체육관 수영장"],"평창군":["평창군민체육관 수영장"],"정선군":["정선군민체육관 수영장"],"철원군":["철원군민체육관 수영장"],"화천군":["화천군민체육관 수영장"],"양구군":["양구군민체육관 수영장"],"인제군":["인제군민체육관 수영장"],"고성군":["고성군민체육관 수영장"],"양양군":["양양군민체육관 수영장"]},
   "충청북도": {"청주시":["청주시민체육관 수영장","흥덕구 수영장","청원구 수영장","서원구 수영장","상당구 수영장"],"충주시":["충주시민체육관 수영장","호암동 수영장"],"제천시":["제천시민체육관 수영장"],"보은군":["보은군민체육관 수영장"],"옥천군":["옥천군민체육관 수영장"],"영동군":["영동군민체육관 수영장"],"증평군":["증평군민체육관 수영장"],"진천군":["진천군민체육관 수영장"],"괴산군":["괴산군민체육관 수영장"],"음성군":["음성군민체육관 수영장"],"단양군":["단양군민체육관 수영장"]},
   "충청남도": {"천안시":["천안시민체육관 수영장","서북구 수영장","동남구 수영장"],"공주시":["공주시민체육관 수영장"],"보령시":["보령시민체육관 수영장"],"아산시":["아산시민체육관 수영장","온양 수영장"],"서산시":["서산시민체육관 수영장"],"논산시":["논산시민체육관 수영장"],"계룡시":["계룡시민체육관 수영장"],"당진시":["당진시민체육관 수영장"],"금산군":["금산군민체육관 수영장"],"부여군":["부여군민체육관 수영장"],"서천군":["서천군민체육관 수영장"],"청양군":["청양군민체육관 수영장"],"홍성군":["홍성군민체육관 수영장"],"예산군":["예산군민체육관 수영장"],"태안군":["태안군민체육관 수영장"]},
   "전라북도": {"전주시":["전주시민체육관 수영장","덕진구 수영장","완산구 수영장"],"군산시":["군산시민체육관 수영장","나운동 수영장"],"익산시":["익산시민체육관 수영장","영등동 수영장"],"정읍시":["정읍시민체육관 수영장"],"남원시":["남원시민체육관 수영장"],"김제시":["김제시민체육관 수영장"],"완주군":["완주군민체육관 수영장"],"진안군":["진안군민체육관 수영장"],"무주군":["무주군민체육관 수영장"],"장수군":["장수군민체육관 수영장"],"임실군":["임실군민체육관 수영장"],"순창군":["순창군민체육관 수영장"],"고창군":["고창군민체육관 수영장"],"부안군":["부안군민체육관 수영장"]},
@@ -399,29 +399,9 @@ export default function App() {
         </div>
       )}
 
-      {/* ── 일정 탭 ── */}
+      {/* ── 연간 일정 탭 ── */}
       {tab==="list" && (
-        <div style={S.content}>
-          <div style={{fontWeight:800,fontSize:14,color:"#023E8A",marginBottom:10}}>📋 {year}년 {MONTHS[month]} 전체 일정</div>
-          {monthEvents.length===0
-            ? <div style={{textAlign:"center",color:"#90CAE4",fontSize:13,padding:"40px 0"}}>🏊 이번 달 일정이 없어요</div>
-            : monthEvents.map(ev=>(
-              <div key={ev.id} onClick={e=>openEdit(ev,e)}
-                style={{background:"white",borderRadius:14,padding:"12px 14px",marginBottom:8,display:"flex",alignItems:"flex-start",gap:10,borderLeft:`4px solid ${ev.color}`,boxShadow:"0 1px 4px rgba(0,119,182,0.08)",cursor:"pointer"}}>
-                <span style={{fontSize:22,marginTop:2}}>{ev.icon}</span>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontWeight:700,fontSize:14,color:"#023E8A"}}>{ev.title}</div>
-                  {ev.pool&&<div style={{fontSize:11,color:"#0077B6",fontWeight:600,marginTop:2}}>📍 {ev.pool}</div>}
-                  <div style={{fontSize:11,color:"#90CAE4",marginTop:2}}>
-                    {fmtDate(ev.dateKey)}{(ev.startTime||ev.endTime)?` · ⏱ ${timeRange(ev.startTime,ev.endTime)}`:""}
-                  </div>
-                  {ev.authorName&&<div style={{fontSize:10,color:"#48CAE4",marginTop:2}}>✍️ {ev.authorName}</div>}
-                  {ev.note&&<div style={{fontSize:11,color:"#64748B",marginTop:3}}>💬 {ev.note}</div>}
-                </div>
-              </div>
-            ))
-          }
-        </div>
+        <YearlyView year={year} events={events} holidays={holidays} onEdit={openEdit} todayKey={todayKey}/>
       )}
 
       {/* ── 팀 탭 ── */}
@@ -529,6 +509,151 @@ export default function App() {
       )}
 
       <style>{GLOBAL_CSS}</style>
+    </div>
+  );
+}
+
+
+// ── 연간 일정 뷰 ──────────────────────────────────────────────────────────────
+function YearlyView({ year, events, holidays, onEdit, todayKey }) {
+  const MONTHS_KR = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
+  const WEEKDAYS  = ["일","월","화","수","목","금","토"];
+  const timeRange = (s,e) => s&&e?`${s} ~ ${e}`:s?`${s}~`:e?`~${e}`:"";
+
+  const totalCount = events.filter(e => e.dateKey?.startsWith(String(year))).length;
+
+  // 일정이 있는 달만 필터링
+  const activeMonths = MONTHS_KR.map((mName, mIdx) => {
+    const mEvents = events
+      .filter(e => {
+        const [y,m] = (e.dateKey||"").split("-");
+        return Number(y)===year && Number(m)===mIdx+1;
+      })
+      .sort((a,b) => a.dateKey>b.dateKey?1:a.dateKey<b.dateKey?-1:0);
+    return { mName, mIdx, mEvents };
+  }).filter(({ mEvents }) => mEvents.length > 0);
+
+  return (
+    <div style={{padding:"12px 12px 80px"}}>
+      {/* 헤더 */}
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+        <div>
+          <div style={{fontWeight:900,fontSize:18,color:"#023E8A"}}>{year}년 연간 일정</div>
+          <div style={{fontSize:12,color:"#90CAE4",marginTop:2}}>총 {totalCount}개 · {activeMonths.length}개월</div>
+        </div>
+        <div style={{fontSize:28}}>🗓️</div>
+      </div>
+
+      {/* 일정 없을 때 */}
+      {activeMonths.length===0 && (
+        <div style={{textAlign:"center",color:"#90CAE4",fontSize:13,padding:"60px 0",lineHeight:2}}>
+          <div style={{fontSize:40,marginBottom:12}}>🏊</div>
+          {year}년에 등록된 일정이 없어요<br/>달력에서 일정을 추가해보세요!
+        </div>
+      )}
+
+      {/* 일정 있는 달만 스크롤 표시 */}
+      {activeMonths.map(({ mName, mIdx, mEvents }) => {
+        const isNow   = new Date().getMonth()===mIdx && new Date().getFullYear()===year;
+        const hasPast = new Date(year, mIdx+1, 0) < new Date() && !isNow;
+
+        // 날짜별 그룹
+        const groups = {};
+        mEvents.forEach(ev => {
+          if (!groups[ev.dateKey]) groups[ev.dateKey] = [];
+          groups[ev.dateKey].push(ev);
+        });
+
+        return (
+          <div key={mIdx} style={{marginBottom:20}}>
+            {/* 월 헤더 */}
+            <div style={{
+              display:"flex",alignItems:"center",gap:10,
+              background:isNow?"linear-gradient(135deg,#023E8A,#0077B6)":hasPast?"#F1F5F9":"white",
+              borderRadius:"14px 14px 0 0",
+              padding:"12px 16px",
+              border:`1.5px solid ${isNow?"#0077B6":hasPast?"#E2E8F0":"#CCEEFF"}`,
+              borderBottom:"none",
+              boxShadow:"0 1px 4px rgba(0,119,182,0.08)"}}>
+              <span style={{fontWeight:900,fontSize:15,
+                color:isNow?"white":hasPast?"#94A3B8":"#023E8A"}}>
+                {mName}
+              </span>
+              {isNow&&(
+                <span style={{fontSize:10,background:"rgba(255,255,255,0.25)",color:"white",
+                  borderRadius:20,padding:"2px 8px",fontWeight:700}}>이번 달</span>
+              )}
+              <span style={{fontSize:11,fontWeight:700,marginLeft:"auto",
+                background:isNow?"rgba(255,255,255,0.2)":hasPast?"#E2E8F0":"#E0F4FF",
+                color:isNow?"white":hasPast?"#94A3B8":"#0077B6",
+                borderRadius:20,padding:"2px 10px"}}>
+                {mEvents.length}개
+              </span>
+            </div>
+
+            {/* 날짜별 일정 목록 */}
+            <div style={{background:"white",border:`1.5px solid ${isNow?"#0077B6":hasPast?"#E2E8F0":"#CCEEFF"}`,
+              borderTop:"none",borderRadius:"0 0 14px 14px",overflow:"hidden"}}>
+              {Object.entries(groups).map(([dateKey, evs]) => {
+                const [,,d] = dateKey.split("-");
+                const dow    = WEEKDAYS[new Date(year, mIdx, Number(d)).getDay()];
+                const isToday= dateKey===todayKey;
+                const hName  = holidays[dateKey];
+                const isSun  = new Date(year, mIdx, Number(d)).getDay()===0;
+                const isSat  = new Date(year, mIdx, Number(d)).getDay()===6;
+                return (
+                  <div key={dateKey} style={{borderBottom:"1px solid #F0F9FF"}}>
+                    {/* 날짜 행 */}
+                    <div style={{display:"flex",alignItems:"center",gap:6,
+                      padding:"8px 14px 4px",
+                      background:isToday?"#EFF8FF":hName?"#FFF5F5":"transparent"}}>
+                      <div style={{
+                        display:"inline-flex",alignItems:"center",gap:4,
+                        background:isToday?"#0077B6":hName?"#FFE8E8":(isSun||isSat)?"#FFF0F0":"#F1F5F9",
+                        color:isToday?"white":(hName||isSun)?"#FF3B3B":isSat?"#00B4D8":"#64748B",
+                        borderRadius:20,padding:"2px 10px",fontSize:11,fontWeight:800}}>
+                        {d}일 {dow}
+                      </div>
+                      {isToday&&<span style={{fontSize:10,color:"#0077B6",fontWeight:700}}>오늘</span>}
+                      {hName&&<span style={{fontSize:10,color:"#FF3B3B",fontWeight:700}}>🎌 {hName}</span>}
+                    </div>
+                    {/* 일정들 */}
+                    {evs.map(ev => (
+                      <div key={ev.id} onClick={e=>onEdit(ev,e)}
+                        style={{display:"flex",alignItems:"center",gap:10,
+                          padding:"8px 14px 8px 20px",cursor:"pointer",
+                          borderLeft:`3px solid ${ev.color}`}}>
+                        <span style={{fontSize:18}}>{ev.icon}</span>
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{fontWeight:700,fontSize:13,color:"#023E8A",
+                            overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                            {ev.title}
+                          </div>
+                          <div style={{display:"flex",gap:8,marginTop:2,flexWrap:"wrap"}}>
+                            {(ev.startTime||ev.endTime)&&
+                              <span style={{fontSize:10,color:"#00B4D8",fontWeight:600}}>
+                                ⏱ {timeRange(ev.startTime,ev.endTime)}
+                              </span>}
+                            {ev.pool&&
+                              <span style={{fontSize:10,color:"#0077B6",fontWeight:600}}>
+                                📍 {ev.pool}
+                              </span>}
+                            {ev.authorName&&
+                              <span style={{fontSize:10,color:"#94A3B8"}}>
+                                ✍️ {ev.authorName}
+                              </span>}
+                          </div>
+                          {ev.note&&<div style={{fontSize:10,color:"#64748B",marginTop:2}}>💬 {ev.note}</div>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
