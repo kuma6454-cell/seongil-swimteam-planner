@@ -289,12 +289,8 @@ export default function App() {
       setModal(null);
       // 카카오 공유 (저장 후 자동 팝업)
       const appUrl = `${window.location.origin}?date=${modal.date}`;
-      const msg = `🏊 [성일수영팀] ${isEdit?"일정 수정":"새 일정"}
-📅 ${fmtDate(modal.date)} ${form.startTime||""}
-${form.icon} ${form.title}${form.pool?"
-📍 "+form.pool:""}
-
-👉 앱에서 확인: ${appUrl}`;
+      const poolText = form.pool ? `\n📍 ${form.pool}` : "";
+      const msg = `🏊 [성일수영팀] ${isEdit?"일정 수정":"새 일정"}\n📅 ${fmtDate(modal.date)} ${form.startTime||""}\n${form.icon} ${form.title}${poolText}\n\n👉 앱에서 확인: ${appUrl}`;
       if (navigator.share) {
         navigator.share({ title:"성일수영팀 일정", text: msg });
       } else {
