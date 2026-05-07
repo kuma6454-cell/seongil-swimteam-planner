@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from "firebase/firestore";
+import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "firebase/auth";
 
 // ─── Firebase 설정 ────────────────────────────────────────────────────────────
@@ -17,7 +17,7 @@ const db   = getFirestore(app);
 const auth = getAuth(app);
 
 // ─── 수영장 데이터 ─────────────────────────────────────────────────────────────
-const DEFAULT_POOL = "서울체육고등학교 수영장";
+const DEFAULT_POOL = "성일스포렉스 (강동구 성내동)";
 const METRO_POOLS = {
   "서울특별시": ["서울체육고등학교 수영장","잠실 실내수영장","성일스포렉스","한국체육대학교 수영장","온조대왕체육센터 수영장","올림픽수영장"],
   "부산광역시": ["부산사직 실내수영장","부산진구민체육센터 수영장"],
@@ -137,6 +137,9 @@ export default function App() {
   const [tab,       setTab]       = useState("calendar");
   const [toast,     setToast]     = useState(null);
   const [syncAnim,  setSyncAnim]  = useState(false);
+  const [members,   setMembers]   = useState([]);
+  const [pending,   setPending]   = useState([]);
+  const [myRole,    setMyRole]    = useState("member");
 
   const touchStartX = useRef(null);
   const touchStartY = useRef(null);
@@ -167,6 +170,57 @@ export default function App() {
     });
     return unsub;
   }, [user]);
+
+  // ── 멤버 등록 및 실시간 동기화 ──────────────────────────────────────────────
+  useEffect(() => {
+    if (!user) return;
+    // 내 정보 등록/업데이트
+    const registerMember = async () => {
+      const ref = doc(db, "members", user.uid);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) {
+        // 첫 번째 멤버는 자동으로 관리자
+        const allSnap = await getDoc(doc(db, "meta", "info"));
+        const isFirst = !allSnap.exists();
+        await setDoc(ref, {
+          uid: user.uid,
+          name: user.displayName,
+          email: user.email,
+          photo: user.photoURL,
+          role: isFirst ? "admin" : "pending",
+          joinedAt: serverTimestamp(),
+        });
+        if (isFirst) {
+          await setDoc(doc(db, "meta", "info"), { initialized: true, adminUid: user.uid });
+        }
+      } else {
+        await updateDoc(ref, { name: user.displayName, email: user.email, photo: user.photoURL, lastSeen: serverTimestamp() });
+      }
+    };
+    registerMember();
+
+    // 멤버 목록 실시간
+    const unsubMembers = onSnapshot(collection(db, "members"), snap => {
+      const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setMembers(all.filter(m => m.role === "admin" || m.role === "member"));
+      setPending(all.filter(m => m.role === "pending"));
+      const me = all.find(m => m.uid === user.uid);
+      if (me) setMyRole(me.role);
+    });
+    return unsubMembers;
+  }, [user]);
+
+  // ── 딥링크 처리 (카카오 공유 링크 클릭 시 해당 날짜로 이동) ────────────────
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const dateParam = params.get("date");
+    if (dateParam) {
+      const [y,m] = dateParam.split("-");
+      setYear(Number(y));
+      setMonth(Number(m)-1);
+      setTab("calendar");
+    }
+  }, []);
 
   const showToast = useCallback((msg, type="info") => {
     setToast({msg,type});
@@ -226,14 +280,27 @@ export default function App() {
       updatedAt: serverTimestamp(),
     };
     try {
-      if (modal.id) {
+      const isEdit = !!modal.id;
+      if (isEdit) {
         await updateDoc(doc(db,"events",modal.id), data);
-        showToast("일정이 수정됐어요 ✏️","success");
       } else {
         await addDoc(collection(db,"events"), { ...data, createdAt: serverTimestamp() });
-        showToast("일정이 추가됐어요 🏊","success");
       }
       setModal(null);
+      // 카카오 공유 (저장 후 자동 팝업)
+      const appUrl = `${window.location.origin}?date=${modal.date}`;
+      const msg = `🏊 [성일수영팀] ${isEdit?"일정 수정":"새 일정"}
+📅 ${fmtDate(modal.date)} ${form.startTime||""}
+${form.icon} ${form.title}${form.pool?"
+📍 "+form.pool:""}
+
+👉 앱에서 확인: ${appUrl}`;
+      if (navigator.share) {
+        navigator.share({ title:"성일수영팀 일정", text: msg });
+      } else {
+        navigator.clipboard.writeText(msg);
+        showToast(isEdit?"수정됐어요! 카카오 공유내용 복사됨 🟡":"추가됐어요! 카카오 공유내용 복사됨 🟡","success");
+      }
     } catch(e) { showToast("저장 실패: "+e.message,"warn"); }
   };
 
@@ -255,6 +322,16 @@ export default function App() {
   const monthEvents = events
     .filter(e => { const [y,m]=e.dateKey.split("-"); return Number(y)===year&&Number(m)===month+1; })
     .sort((a,b) => a.dateKey>b.dateKey?1:a.dateKey<b.dateKey?-1:(a.startTime||"")>(b.startTime||"")?1:-1);
+
+  // ── pending 멤버 차단 ────────────────────────────────────────────────────
+  if (user && myRole === "kicked") return (
+    <div style={{minHeight:"100vh",background:"#F0FAFF",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:12,padding:24}}>
+      <div style={{fontSize:48}}>🚫</div>
+      <div style={{fontWeight:800,fontSize:16,color:"#FF3B3B"}}>접근이 제한됐어요</div>
+      <div style={{fontSize:13,color:"#64748B",textAlign:"center"}}>관리자에 의해 탈퇴 처리됐어요.<br/>문의는 팀 관리자에게 해주세요.</div>
+      <button onClick={()=>signOut(auth)} style={{marginTop:8,background:"#FF3B3B",color:"white",border:"none",borderRadius:12,padding:"10px 20px",fontSize:13,fontWeight:700,cursor:"pointer"}}>로그아웃</button>
+    </div>
+  );
 
   // ── 로딩 ──────────────────────────────────────────────────────────────────
   if (loading) return (
@@ -429,48 +506,10 @@ export default function App() {
 
       {/* ── 팀 탭 ── */}
       {tab==="team" && (
-        <div style={S.content}>
-          <div style={{background:"linear-gradient(135deg,#023E8A,#0077B6)",borderRadius:16,padding:20,color:"white",marginBottom:12,textAlign:"center"}}>
-            <div style={{fontSize:40,marginBottom:8}}>🏊</div>
-            <div style={{fontWeight:900,fontSize:16,marginBottom:4}}>성일 수영팀</div>
-            <div style={{fontSize:13,opacity:0.8}}>Google 계정으로 로그인한 팀원 모두<br/>자동으로 일정이 실시간 공유돼요!</div>
-          </div>
-
-          <div style={{background:"white",borderRadius:16,padding:16,marginBottom:12,boxShadow:"0 1px 8px rgba(0,119,182,0.07)"}}>
-            <div style={{fontWeight:800,fontSize:14,color:"#023E8A",marginBottom:12}}>👤 내 정보</div>
-            <div style={{display:"flex",alignItems:"center",gap:12}}>
-              <img src={user.photoURL} alt="" style={{width:48,height:48,borderRadius:"50%",border:"3px solid #0077B6"}} onError={e=>e.target.style.display="none"}/>
-              <div>
-                <div style={{fontWeight:700,fontSize:15,color:"#023E8A"}}>{user.displayName}</div>
-                <div style={{fontSize:12,color:"#90CAE4"}}>{user.email}</div>
-                <div style={{fontSize:11,color:"#2DC653",marginTop:2,fontWeight:600}}>✅ 실시간 공유 중</div>
-              </div>
-            </div>
-          </div>
-
-          <div style={{background:"white",borderRadius:16,padding:16,marginBottom:12,boxShadow:"0 1px 8px rgba(0,119,182,0.07)"}}>
-            <div style={{fontWeight:800,fontSize:14,color:"#023E8A",marginBottom:8}}>🔗 팀원 초대 방법</div>
-            <div style={{fontSize:13,color:"#64748B",lineHeight:1.8}}>
-              아래 앱 링크를 카카오톡으로 공유하세요.<br/>
-              팀원이 <strong style={{color:"#0077B6"}}>Google 계정으로 로그인</strong>하면<br/>
-              바로 모든 일정이 실시간으로 보여요! 🎉
-            </div>
-            <button onClick={()=>{
-              navigator.clipboard.writeText(window.location.href);
-              showToast("앱 링크 복사됨! 카카오톡에 붙여넣으세요 🔗","success");
-            }} style={{marginTop:12,width:"100%",background:"#FEE500",color:"#1a1a1a",border:"none",borderRadius:12,padding:"11px",fontSize:13,fontWeight:800,cursor:"pointer"}}>
-              🟡 카카오톡으로 초대 링크 공유
-            </button>
-          </div>
-
-          <div style={{background:"#E0F4FF",borderRadius:16,padding:16,marginBottom:12}}>
-            <div style={{fontWeight:800,fontSize:13,color:"#023E8A",marginBottom:6}}>📱 홈 화면에 설치하기</div>
-            <div style={{fontSize:12,color:"#0077B6",lineHeight:1.8}}>
-              iPhone: Safari → 공유버튼(□↑) → 홈 화면에 추가<br/>
-              Android: Chrome → 메뉴(⋮) → 앱 설치
-            </div>
-          </div>
-        </div>
+        <TeamTab
+          user={user} members={members} pending={pending} myRole={myRole}
+          db={db} showToast={showToast}
+        />
       )}
 
       {/* FAB */}
@@ -536,6 +575,161 @@ export default function App() {
   );
 }
 
+
+
+// ── 팀 탭 컴포넌트 ───────────────────────────────────────────────────────────
+function TeamTab({ user, members, pending, myRole, db, showToast }) {
+  const isAdmin = myRole === "admin";
+
+  const approveMember = async (uid) => {
+    await updateDoc(doc(db, "members", uid), { role: "member" });
+    showToast("승인됐어요! 🎉", "success");
+  };
+  const rejectMember = async (uid) => {
+    await updateDoc(doc(db, "members", uid), { role: "rejected" });
+    showToast("거절됐어요", "info");
+  };
+  const kickMember = async (uid) => {
+    if (uid === user.uid) { showToast("자기 자신은 탈퇴할 수 없어요", "warn"); return; }
+    await updateDoc(doc(db, "members", uid), { role: "kicked" });
+    showToast("강제 탈퇴됐어요", "info");
+  };
+  const makeAdmin = async (uid) => {
+    await updateDoc(doc(db, "members", uid), { role: "admin" });
+    showToast("관리자로 지정됐어요 👑", "success");
+  };
+
+  const shareInvite = () => {
+    const text = `🏊 성일수영팀 플래너 초대
+
+아래 링크로 접속 후 Google 로그인 해주세요!
+${window.location.origin}
+
+관리자 승인 후 이용 가능합니다.`;
+    if (navigator.share) navigator.share({ title:"성일수영팀 초대", text });
+    else { navigator.clipboard.writeText(text); showToast("초대 링크 복사됨! 카카오톡에 붙여넣으세요 🟡", "success"); }
+  };
+
+  return (
+    <div style={{padding:"12px 12px 80px"}}>
+      {/* 헤더 */}
+      <div style={{background:"linear-gradient(135deg,#023E8A,#0077B6)",borderRadius:16,padding:20,color:"white",marginBottom:12,textAlign:"center"}}>
+        <div style={{fontSize:36,marginBottom:6}}>🏊</div>
+        <div style={{fontWeight:900,fontSize:16,marginBottom:4}}>성일 수영팀</div>
+        <div style={{fontSize:12,opacity:0.8}}>팀원 {members.length}명 · {isAdmin?"관리자":"일반 멤버"}</div>
+      </div>
+
+      {/* 내 정보 */}
+      <div style={{background:"white",borderRadius:16,padding:16,marginBottom:12,boxShadow:"0 1px 8px rgba(0,119,182,0.07)"}}>
+        <div style={{fontWeight:800,fontSize:14,color:"#023E8A",marginBottom:10}}>👤 내 정보</div>
+        <div style={{display:"flex",alignItems:"center",gap:12}}>
+          <img src={user.photoURL||""} alt="" style={{width:44,height:44,borderRadius:"50%",border:"3px solid #0077B6"}} onError={e=>e.target.style.display="none"}/>
+          <div style={{flex:1}}>
+            <div style={{fontWeight:700,fontSize:14,color:"#023E8A"}}>{user.displayName}</div>
+            <div style={{fontSize:11,color:"#90CAE4"}}>{user.email}</div>
+          </div>
+          <span style={{
+            fontSize:11,fontWeight:800,borderRadius:20,padding:"3px 10px",
+            background:isAdmin?"#FFF3CD":myRole==="pending"?"#FFE8E8":"#E0F4FF",
+            color:isAdmin?"#854D0E":myRole==="pending"?"#FF3B3B":"#0077B6"
+          }}>{isAdmin?"👑 관리자":myRole==="pending"?"⏳ 승인 대기":"✅ 멤버"}</span>
+        </div>
+      </div>
+
+      {/* 승인 대기 (관리자만) */}
+      {isAdmin && pending.length > 0 && (
+        <div style={{background:"#FFF8E1",borderRadius:16,padding:16,marginBottom:12,border:"1.5px solid #FFD54F"}}>
+          <div style={{fontWeight:800,fontSize:14,color:"#F57F17",marginBottom:10}}>
+            ⏳ 승인 대기 ({pending.length}명)
+          </div>
+          {pending.map(m => (
+            <div key={m.uid} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:"1px solid #FFE082"}}>
+              <img src={m.photo||""} alt="" style={{width:36,height:36,borderRadius:"50%",background:"#E0F4FF"}} onError={e=>e.target.style.display="none"}/>
+              <div style={{flex:1}}>
+                <div style={{fontWeight:700,fontSize:13,color:"#1a3a5c"}}>{m.name}</div>
+                <div style={{fontSize:10,color:"#90CAE4"}}>{m.email}</div>
+              </div>
+              <button onClick={()=>approveMember(m.uid)}
+                style={{background:"#0077B6",color:"white",border:"none",borderRadius:8,padding:"5px 10px",fontSize:11,fontWeight:700,cursor:"pointer",marginRight:4}}>
+                승인
+              </button>
+              <button onClick={()=>rejectMember(m.uid)}
+                style={{background:"#FFE8E8",color:"#FF3B3B",border:"none",borderRadius:8,padding:"5px 10px",fontSize:11,fontWeight:700,cursor:"pointer"}}>
+                거절
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 승인 대기 중 안내 (본인이 pending일 때) */}
+      {myRole === "pending" && (
+        <div style={{background:"#FFF8E1",borderRadius:16,padding:16,marginBottom:12,textAlign:"center"}}>
+          <div style={{fontSize:32,marginBottom:8}}>⏳</div>
+          <div style={{fontWeight:700,fontSize:14,color:"#F57F17",marginBottom:4}}>관리자 승인 대기 중</div>
+          <div style={{fontSize:12,color:"#64748B"}}>관리자가 승인하면 일정을 볼 수 있어요</div>
+        </div>
+      )}
+
+      {/* 팀원 목록 */}
+      <div style={{background:"white",borderRadius:16,padding:16,marginBottom:12,boxShadow:"0 1px 8px rgba(0,119,182,0.07)"}}>
+        <div style={{fontWeight:800,fontSize:14,color:"#023E8A",marginBottom:10}}>
+          🏊 팀원 목록 ({members.length}명)
+        </div>
+        {members.map(m => (
+          <div key={m.uid} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:"1px solid #F0F9FF"}}>
+            <img src={m.photo||""} alt="" style={{width:36,height:36,borderRadius:"50%",background:"#E0F4FF",border:`2px solid ${m.role==="admin"?"#F7A325":"#CCEEFF"}`}} onError={e=>e.target.style.display="none"}/>
+            <div style={{flex:1}}>
+              <div style={{display:"flex",alignItems:"center",gap:6}}>
+                <span style={{fontWeight:700,fontSize:13,color:"#023E8A"}}>{m.name}</span>
+                {m.role==="admin"&&<span style={{fontSize:10,background:"#FFF3CD",color:"#854D0E",borderRadius:20,padding:"1px 6px",fontWeight:700}}>👑 관리자</span>}
+                {m.uid===user.uid&&<span style={{fontSize:10,background:"#E0F4FF",color:"#0077B6",borderRadius:20,padding:"1px 6px",fontWeight:700}}>나</span>}
+              </div>
+              <div style={{fontSize:10,color:"#90CAE4"}}>{m.email}</div>
+            </div>
+            {/* 관리자 권한 버튼 */}
+            {isAdmin && m.uid !== user.uid && (
+              <div style={{display:"flex",gap:4}}>
+                {m.role !== "admin" && (
+                  <button onClick={()=>makeAdmin(m.uid)}
+                    style={{background:"#FFF3CD",color:"#854D0E",border:"none",borderRadius:8,padding:"4px 8px",fontSize:10,fontWeight:700,cursor:"pointer"}}>
+                    👑
+                  </button>
+                )}
+                <button onClick={()=>kickMember(m.uid)}
+                  style={{background:"#FFE8E8",color:"#FF3B3B",border:"none",borderRadius:8,padding:"4px 8px",fontSize:10,fontWeight:700,cursor:"pointer"}}>
+                  탈퇴
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* 초대 */}
+      <div style={{background:"white",borderRadius:16,padding:16,marginBottom:12,boxShadow:"0 1px 8px rgba(0,119,182,0.07)"}}>
+        <div style={{fontWeight:800,fontSize:14,color:"#023E8A",marginBottom:8}}>🔗 팀원 초대</div>
+        <div style={{fontSize:12,color:"#64748B",lineHeight:1.8,marginBottom:10}}>
+          링크를 공유하면 팀원이 Google 로그인 후<br/>
+          <strong style={{color:"#0077B6"}}>관리자 승인</strong>을 받아 팀에 합류해요!
+        </div>
+        <button onClick={shareInvite}
+          style={{width:"100%",background:"#FEE500",color:"#1a1a1a",border:"none",borderRadius:12,padding:"11px",fontSize:13,fontWeight:800,cursor:"pointer"}}>
+          🟡 카카오톡으로 초대 링크 공유
+        </button>
+      </div>
+
+      {/* 홈화면 설치 */}
+      <div style={{background:"#E0F4FF",borderRadius:16,padding:16}}>
+        <div style={{fontWeight:800,fontSize:13,color:"#023E8A",marginBottom:6}}>📱 홈 화면에 설치하기</div>
+        <div style={{fontSize:12,color:"#0077B6",lineHeight:1.8}}>
+          iPhone: Safari → 공유버튼(□↑) → 홈 화면에 추가<br/>
+          Android: Chrome → 메뉴(⋮) → 앱 설치
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ── 연간 일정 뷰 ──────────────────────────────────────────────────────────────
 function YearlyView({ year, events, holidays, onEdit, todayKey }) {
