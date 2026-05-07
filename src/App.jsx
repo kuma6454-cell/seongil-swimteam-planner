@@ -58,6 +58,41 @@ const timeRange   = (s,e) => s&&e?`${s} ~ ${e}`:s?`${s}~`:e?`~${e}`:"";
 
 // ─── 공휴일 가져오기 (Google Calendar API) ────────────────────────────────────
 // ─── 공휴일 가져오기 (Google Calendar API) ────────────────────────────────────
+// 기념일 제외 목록 (공휴일 아닌 날)
+const NON_HOLIDAYS = [
+  "어버이날", "스승의날", "성년의날", "부부의날",
+  "어린이날 대체공휴일 아님", "한글날 기념일",
+  "육군창설일", "국군의날", "경찰의날", "소방의날",
+  "무역의날", "납세자의날", "도서관의날", "신문의날",
+  "발명의날", "정보통신의날", "과학의날", "식목일",
+  "환경의날", "바다의날", "철도의날", "소비자의날",
+  "저축의날", "문화의날", "체육의날", "교육의날",
+];
+
+// 실제 법정 공휴일 키워드
+const HOLIDAY_KEYWORDS = [
+  "신정", "설날", "삼일절", "어린이날", "부처님오신날",
+  "현충일", "광복절", "추석", "개천절", "한글날",
+  "성탄절", "크리스마스", "대체공휴일", "임시공휴일",
+  "선거일", "국경일",
+];
+
+// 공휴일 이름 정리 함수
+function cleanHolidayName(name) {
+  // "쉬는 날 어린이날" → "어린이날 대체공휴일"
+  // "쉬는 날 광복절" → "광복절 대체공휴일"
+  if (name.startsWith("쉬는 날 ") || name.startsWith("쉬는날 ")) {
+    const original = name.replace(/^쉬는\s*날\s*/, "").trim();
+    return `${original} 대체공휴일`;
+  }
+  // "대체공휴일 (어린이날)" 형식도 정리
+  if (name.includes("대체공휴일") && name.includes("(")) {
+    const match = name.match(/\((.+?)\)/);
+    if (match) return `${match[1]} 대체공휴일`;
+  }
+  return name;
+}
+
 async function fetchHolidays(year) {
   try {
     const calId = "ko.south_korea%23holiday%40group.v.calendar.google.com";
@@ -69,7 +104,16 @@ async function fetchHolidays(year) {
     const data  = await res.json();
     const map   = {};
     (data.items || []).forEach(item => {
-      if (item.start?.date) map[item.start.date] = item.summary;
+      if (!item.start?.date) return;
+      const name = item.summary || "";
+      // 기념일 제외
+      const isNonHoliday = NON_HOLIDAYS.some(n => name.includes(n));
+      if (isNonHoliday) return;
+      // 공휴일 키워드 포함이면 공휴일로 처리
+      const isHoliday = HOLIDAY_KEYWORDS.some(k => name.includes(k));
+      if (isHoliday) {
+        map[item.start.date] = cleanHolidayName(name);
+      }
     });
     return map;
   } catch(e) {
