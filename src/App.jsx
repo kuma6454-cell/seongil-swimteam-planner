@@ -603,7 +603,7 @@ ${window.location.origin}
       {/* 헤더 */}
       <div style={{background:"linear-gradient(135deg,#023E8A,#0077B6)",borderRadius:16,padding:20,color:"white",marginBottom:12,textAlign:"center"}}>
         <div style={{fontSize:36,marginBottom:6}}>🏊</div>
-        <div style={{fontWeight:900,fontSize:16,marginBottom:4}}>성일 수영팀</div>
+        <div style={{fontWeight:900,fontSize:16,marginBottom:4}}>성일초등학교 수영부 A 등록선수반</div>
         <div style={{fontSize:12,opacity:0.8}}>팀원 {members.length}명 · {isAdmin?"관리자":"일반 멤버"}</div>
       </div>
 
